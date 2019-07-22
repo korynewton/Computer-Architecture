@@ -9,11 +9,21 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         # memory to hold 256 bytes of memory
-        self.memory = [0] * 256
+        self.ram = [0] * 256
         # 8 genreal purpose registers
-        self.register = [0] * 8
+        self.reg = [0] * 8
         # initialize PC that will be incremented
         self.pc = 0
+
+    def ram_read(self, MAR):
+        """accept the address to read and return the value stored there
+        MAR = Memory ADdress Register"""
+        return self.ram[MAR]
+
+    def ram_write(self, MDR, MAR):
+        """accepts a value to write, and the address to write it to. 
+        MDR = Memory Data Register, MAR = Memory ADdress Register"""
+        self.ram[MAR] = MDR
 
     def load(self):
         """Load a program into memory."""
