@@ -9,7 +9,7 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         # memory to hold 256 bytes of memory
-        self.ram = [0] * 256
+        self.ram = [00000000] * 256
         # 8 genreal purpose registers
         self.reg = [0] * 8
         # initialize PC that will be incremented
@@ -77,4 +77,4 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        ir = self.reg[self.pc]
