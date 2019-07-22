@@ -21,7 +21,7 @@ class CPU:
         return self.ram[MAR]
 
     def ram_write(self, MDR, MAR):
-        """accepts a value to write, and the address to write it to. 
+        """accepts a value to write, and the address to write it to.
         MDR = Memory Data Register, MAR = Memory ADdress Register"""
         self.ram[MAR] = MDR
 
@@ -78,31 +78,38 @@ class CPU:
     def run(self):
         """Run the CPU."""
 
-        # holds a copy of the currently executing 8-bit instruction
-        ir = self.ram[self.pc]
-
-        # stores operands a and b which can be 1 or 2 bytes ahead of instruction byte, or nonexistent
-        operand_a = self.ram_read(self.pc+1)
-        operand_b = self.ram_read(self.pc+2)
+        LDI = 0b10000010
+        PRN = 0b01000111
+        HLT = 0b00000001
 
         # 00, 01, 11
         # none, one, two
         running = True
 
         while running:
+            # holds a copy of the currently executing 8-bit instruction
+            ir = self.ram[self.pc]
+
+            # stores operands a and b which can be 1 or 2 bytes ahead of instruction byte, or nonexistent
+            operand_a = self.ram_read(self.pc+1)
+            operand_b = self.ram_read(self.pc+2)
+
             if ir > 0b01111111:
-                # TODO it has two operands
-                if ir == = 0b10000010:
+                # has two operands
+                if ir == LDI:
                     """LDI opcode, store value at specified spot in register"""
                     self.reg[operand_a] = operand_b
 
                 self.pc += 3
             elif ir < 0b10000000 and ir > 0b00111111:
-                # TODO has one operand
+                # has one operand
+                if ir == PRN:
+                    print(self.reg[operand_a])
                 self.pc += 2
             else:
-                # TODO has zero operands
-                if ir == 0b00000001:
+                # has zero operands
+                if ir == HLT:
+                    print('Code halting...')
                     """ HLT opcode, stop loop"""
                     running = False
                     break
