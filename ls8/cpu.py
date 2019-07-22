@@ -77,4 +77,23 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        ir = self.reg[self.pc]
+
+        # holds a copy of the currently executing 8-bit instruction
+        ir = self.ram[self.pc]
+
+        # stores operands a and b which can be 1 or 2 bytes ahead of instruction byte, or nonexistent
+        operand_a = self.ram_read(self.pc+1)
+        operand_b = self.ram_read(self.pc+2)
+
+        # 00, 01, 11
+        # none, one, two
+
+        if ir > 0b01111111:
+            # TODO it has two operands
+            self.pc += 3
+        elif ir < 0b10000000 and ir > 0b00111111:
+            # TODO has one operand
+            self.pc += 2
+        else:
+            # TODO has zero operands
+            self.pc += 1
