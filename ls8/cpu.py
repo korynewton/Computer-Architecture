@@ -87,13 +87,23 @@ class CPU:
 
         # 00, 01, 11
         # none, one, two
+        running = True
 
-        if ir > 0b01111111:
-            # TODO it has two operands
-            self.pc += 3
-        elif ir < 0b10000000 and ir > 0b00111111:
-            # TODO has one operand
-            self.pc += 2
-        else:
-            # TODO has zero operands
-            self.pc += 1
+        while running:
+            if ir > 0b01111111:
+                # TODO it has two operands
+                if ir == = 0b10000010:
+                    """LDI opcode, store value at specified spot in register"""
+                    self.reg[operand_a] = operand_b
+
+                self.pc += 3
+            elif ir < 0b10000000 and ir > 0b00111111:
+                # TODO has one operand
+                self.pc += 2
+            else:
+                # TODO has zero operands
+                if ir == 0b00000001:
+                    """ HLT opcode, stop loop"""
+                    running = False
+                    break
+                self.pc += 1
