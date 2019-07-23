@@ -82,8 +82,6 @@ class CPU:
         PRN = 0b01000111
         HLT = 0b00000001
 
-        # 00, 01, 11
-        # none, one, two
         running = True
 
         while running:
@@ -94,23 +92,18 @@ class CPU:
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
 
-            if ir > 0b01111111:
-                # has two operands
-                if ir == LDI:
-                    """LDI opcode, store value at specified spot in register"""
-                    self.reg[operand_a] = operand_b
+            # mask and shift to determine number of operands
+            num_operands = (ir & 0b11000000) >> 6
 
-                self.pc += 3
-            elif ir < 0b10000000 and ir > 0b00111111:
-                # has one operand
-                if ir == PRN:
-                    print(self.reg[operand_a])
-                self.pc += 2
-            else:
-                # has zero operands
-                if ir == HLT:
-                    print('Code halting...')
-                    """ HLT opcode, stop loop"""
-                    running = False
-                    break
-                self.pc += 1
+            if ir == LDI:
+                """LDI opcode, store value at specified spot in register"""
+                self.reg[operand_a] = operand_b
+            elif ir == PRN:
+                print(self.reg[operand_a])
+            elif ir == HLT:
+                print('Code halting...')
+                """ HLT opcode, stop loop"""
+                running = False
+                break
+
+            self.pc += num_operands + 1
