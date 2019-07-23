@@ -55,10 +55,17 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
+        # operations handled within ALU
+        MUL = 0b10100010
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == MUL:
+            mult1 = self.reg[reg_a]
+            mult2 = self.reg[reg_b]
+            res = mult1 * mult2
+            self.reg[reg_a] = res
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -84,7 +91,7 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-
+        # operations handled without ALU
         LDI = 0b10000010
         PRN = 0b01000111
         HLT = 0b00000001
@@ -101,6 +108,10 @@ class CPU:
 
             # mask and shift to determine number of operands
             num_operands = (ir & 0b11000000) >> 6
+            alu_handle = (ir & 0b00100000) >> 5
+
+            if alu_handle:
+                self.alu(ir, operand_a, operand_b)
 
             if ir == LDI:
                 """LDI opcode, store value at specified spot in register"""
@@ -112,5 +123,7 @@ class CPU:
                 """ HLT opcode, stop loop"""
                 running = False
                 break
+            # elif ir == MUL:
+            #     self.alu("MUL", operand_a, operand_b)
 
             self.pc += num_operands + 1
