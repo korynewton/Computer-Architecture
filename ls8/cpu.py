@@ -14,6 +14,10 @@ class CPU:
         self.reg = [0] * 8
         # initialize PC that will be incremented
         self.pc = 0
+        # initialize branch table with all opcodes and the functions they call
+        self.branch_table = {}
+        self.branch_table[0b10000010] = self.handle_ldi
+        self.branch_table[0b01000111] = self.handle_prn
 
     def ram_read(self, MAR):
         """accept the address to read and return the value stored there
@@ -57,15 +61,12 @@ class CPU:
         """ALU operations."""
         # operations handled within ALU
         MUL = 0b10100010
+        ADD = 0b10100000
 
-        if op == "ADD":
+        if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
         elif op == MUL:
-            mult1 = self.reg[reg_a]
-            mult2 = self.reg[reg_b]
-            res = mult1 * mult2
-            self.reg[reg_a] = res
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -89,11 +90,16 @@ class CPU:
 
         print()
 
+    def handle_ldi(self, operand_a, operand_b):
+        # """LDI opcode, store value at specified spot in register"""
+        self.reg[operand_a] = operand_b
+
+    def handle_prn(self, operand_a):
+        print(self.reg[operand_a])
+
     def run(self):
         """Run the CPU."""
-        # operations handled without ALU
-        LDI = 0b10000010
-        PRN = 0b01000111
+        # halt on this opcode
         HLT = 0b00000001
 
         running = True
@@ -101,6 +107,13 @@ class CPU:
         while running:
             # holds a copy of the currently executing 8-bit instruction
             ir = self.ram[self.pc]
+
+            # if current ir is the halt opcode, stop running
+            if ir == HLT:
+                print('Code halting...')
+                """ HLT opcode, stop loop"""
+                running = False
+                break
 
             # stores operands a and b which can be 1 or 2 bytes ahead of instruction byte, or nonexistent
             operand_a = self.ram_read(self.pc+1)
@@ -113,17 +126,11 @@ class CPU:
             if alu_handle:
                 self.alu(ir, operand_a, operand_b)
 
-            if ir == LDI:
-                """LDI opcode, store value at specified spot in register"""
-                self.reg[operand_a] = operand_b
-            elif ir == PRN:
-                print(self.reg[operand_a])
-            elif ir == HLT:
-                print('Code halting...')
-                """ HLT opcode, stop loop"""
-                running = False
-                break
-            # elif ir == MUL:
-            #     self.alu("MUL", operand_a, operand_b)
+            elif num_operands == 2:
+                self.branch_table[ir](operand_a, operand_b)
+            elif num_operands == 1:
+                self.branch_table[ir](operand_a)
+            elif num_operands == 0:
+                self.branch_table[ir]()
 
             self.pc += num_operands + 1
