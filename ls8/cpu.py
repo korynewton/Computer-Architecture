@@ -18,6 +18,7 @@ class CPU:
         self.branch_table = {}
         self.branch_table[0b10000010] = self.handle_ldi
         self.branch_table[0b01000111] = self.handle_prn
+        self.branch_table[0b00000001] = self.handle_hlt
 
     def ram_read(self, MAR):
         """accept the address to read and return the value stored there
@@ -62,11 +63,20 @@ class CPU:
         # operations handled within ALU
         MUL = 0b10100010
         ADD = 0b10100000
+        SUB = 0b10100001
+        DIV = 0b10100011
 
         if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == MUL:
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == SUB:
+            self.reg[reg_a] -= self.reg[reg_b]
+        elif op == DIV:
+            if not self.reg[reg_b]:
+                print("Error: cannot divide by 0")
+                sys.exit()
+            self.reg[reg_a] /= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -97,23 +107,17 @@ class CPU:
     def handle_prn(self, operand_a):
         print(self.reg[operand_a])
 
+    def handle_hlt(self):
+        print('Code halting...')
+        """ HLT opcode, stop loop"""
+        sys.exit()
+
     def run(self):
         """Run the CPU."""
-        # halt on this opcode
-        HLT = 0b00000001
 
-        running = True
-
-        while running:
+        while True:
             # holds a copy of the currently executing 8-bit instruction
             ir = self.ram[self.pc]
-
-            # if current ir is the halt opcode, stop running
-            if ir == HLT:
-                print('Code halting...')
-                """ HLT opcode, stop loop"""
-                running = False
-                break
 
             # stores operands a and b which can be 1 or 2 bytes ahead of instruction byte, or nonexistent
             operand_a = self.ram_read(self.pc+1)
