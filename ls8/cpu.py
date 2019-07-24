@@ -12,13 +12,24 @@ class CPU:
         self.ram = [00000000] * 256
         # 8 genreal purpose registers
         self.reg = [0] * 8
+        # initialize where the start of stack points to in memory, store in r7
+        self.sp = 0xF4
+        self.reg[7] = self.ram[self.sp]
+
         # initialize PC that will be incremented
         self.pc = 0
         # initialize branch table with all opcodes and the functions they call
         self.branch_table = {}
+        # LDI
         self.branch_table[0b10000010] = self.handle_ldi
+        # PRN
         self.branch_table[0b01000111] = self.handle_prn
+        # HLT
         self.branch_table[0b00000001] = self.handle_hlt
+        # PUSH
+        self.branch_table[0b01000101] = self.handle_push
+        # POP
+        self.branch_table[0b01000110] = self.handle_pop
 
     def ram_read(self, MAR):
         """accept the address to read and return the value stored there
@@ -112,10 +123,24 @@ class CPU:
         """ HLT opcode, stop loop"""
         sys.exit()
 
+    def handle_push(self, operand_a):
+        # decrement, then store operand in stack
+        self.sp -= 1
+        r_value = self.reg[operand_a]
+        self.ram[self.sp] = r_value
+
+    def handle_pop(self, operand_a):
+        # store value in stack indicated by pointer, store in register at given reg index given by operand
+        value = self.ram[self.sp]
+        self.reg[operand_a] = value
+        self.sp += 1
+
     def run(self):
         """Run the CPU."""
 
         while True:
+            # self.trace()
+
             # holds a copy of the currently executing 8-bit instruction
             ir = self.ram[self.pc]
 
@@ -136,5 +161,7 @@ class CPU:
                 self.branch_table[ir](operand_a)
             elif num_operands == 0:
                 self.branch_table[ir]()
+            else:
+                self.handle_hlt()
 
             self.pc += num_operands + 1
