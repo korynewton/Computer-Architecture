@@ -30,6 +30,16 @@ class CPU:
         self.branch_table[0b01000101] = self.handle_push
         # POP
         self.branch_table[0b01000110] = self.handle_pop
+        # RET
+        self.branch_table[0b00010001] = self.handle_ret
+        # CALL
+        self.branch_table[0b01010000] = self.handle_call
+
+        # JMP
+        # self.branch_table[0b01010100] = self.handle_jmp
+
+        # TODO ST, RET PRA, OR, NOT, NOP, MOD, LD, JNE, JLT, JLE, JGT, JGE, JEQ, IRET, INT,
+        # INC, DEC
 
     def ram_read(self, MAR):
         """accept the address to read and return the value stored there
@@ -76,6 +86,9 @@ class CPU:
         ADD = 0b10100000
         SUB = 0b10100001
         DIV = 0b10100011
+        SHL = 0b10101100
+        SHR = 0b10101101
+        XOR = 0b10101011
 
         if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
@@ -88,6 +101,20 @@ class CPU:
                 print("Error: cannot divide by 0")
                 sys.exit()
             self.reg[reg_a] /= self.reg[reg_b]
+        elif op == SHL:
+            '''Shifts the value in rega_a left by the number of bits specified in reg_b'''
+            value = self.reg[reg_a]
+            shifted = value << self.reg[reg_b]
+            self.reg[reg_a] = shifted
+        elif op == SHR:
+            '''Shifts the value in rega_a left by the number of bits specified in reg_b'''
+            value = self.reg[reg_a]
+            shifted = value << self.reg[reg_b]
+            self.reg[reg_a] = shifted
+        elif op == XOR:
+            xor_res = self.reg[reg_a] ^ self.reg[reg_b]
+            self.reg[reg_a] = xor_res
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -135,6 +162,26 @@ class CPU:
         self.reg[operand_a] = value
         self.sp += 1
 
+    # def handle_jmp(self, operand_a):
+    #     self.pc = self.reg[operand_a]
+
+    def handle_ret(self):
+        '''Pop the value from the top of the stack and store it in the `PC`.'''
+        ret_addr = self.ram[self.sp]
+        self.pc = ret_addr
+        self.sp += 1
+
+    def handle_call(self, operand_a):
+        '''Calls a subroutine (function) at the address stored in the register'''
+        # push address of instructions that come after sub-routine onto stack
+        self.sp -= 1
+        return_addr = self.pc + 2
+        self.ram[self.sp] = return_addr
+
+        # set pc to address of subroutine start
+        subr_addr = self.reg[operand_a]
+        self.pc = subr_addr
+
     def run(self):
         """Run the CPU."""
 
@@ -151,6 +198,14 @@ class CPU:
             # mask and shift to determine number of operands
             num_operands = (ir & 0b11000000) >> 6
             alu_handle = (ir & 0b00100000) >> 5
+
+            # if CALL or RET is the opcode we'll want to increment PC differently
+            if ir == 0b01010000:
+                self.branch_table[ir](operand_a)
+                continue
+            elif ir == 0b00010001:
+                self.branch_table[ir]()
+                continue
 
             if alu_handle:
                 self.alu(ir, operand_a, operand_b)
