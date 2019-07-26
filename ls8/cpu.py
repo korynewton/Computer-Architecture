@@ -95,6 +95,10 @@ class CPU:
         SHR = 0b10101101
         XOR = 0b10101011
         CMP = 0b10100111
+        OR = 0b10101010
+        AND = 0b10101000
+        NOT = 0b01101001
+        MOD = 0b10100100
 
         if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
@@ -120,6 +124,21 @@ class CPU:
         elif op == XOR:
             xor_res = self.reg[reg_a] ^ self.reg[reg_b]
             self.reg[reg_a] = xor_res
+        elif op == OR:
+            or_res = self.reg[reg_a] | self.reg[reg_b]
+            self.reg[reg_a] = or_res
+        elif op == AND:
+            and_res = self.reg[reg_a] & self.reg[reg_b]
+            self.reg[reg_a] = and_res
+        elif op == NOT:
+            not_res = ~ self.reg[reg_a]
+            self.reg[reg_a] = not_res
+        elif op == MOD:
+            if self.reg[reg_b] == 0:
+                sys.exit(3)
+            else:
+                mod_remainder = self.reg[reg_a] % self.reg[reg_b]
+                self.reg[reg_a] = mod_remainder
         elif op == CMP:
             a = self.reg[reg_a]
             b = self.reg[reg_b]
