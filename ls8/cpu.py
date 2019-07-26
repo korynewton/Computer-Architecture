@@ -9,12 +9,15 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         # memory to hold 256 bytes of memory
-        self.ram = [00000000] * 256
+        self.ram = [0b00000000] * 256
         # 8 genreal purpose registers
         self.reg = [0] * 8
         # initialize where the start of stack points to in memory, store in r7
         self.sp = 0xF4
         self.reg[7] = self.ram[self.sp]
+
+        # flag
+        self.fl = 0b00000000
 
         # initialize PC that will be incremented
         self.pc = 0
@@ -36,7 +39,9 @@ class CPU:
         self.branch_table[0b01010000] = self.handle_call
 
         # JMP
-        # self.branch_table[0b01010100] = self.handle_jmp
+        self.branch_table[0b01010100] = self.handle_jmp
+        # JEQ
+        # self.branch_table[0b01010101] = self.handle_jeq
 
         # TODO ST, RET PRA, OR, NOT, NOP, MOD, LD, JNE, JLT, JLE, JGT, JGE, JEQ, IRET, INT,
         # INC, DEC
@@ -89,6 +94,7 @@ class CPU:
         SHL = 0b10101100
         SHR = 0b10101101
         XOR = 0b10101011
+        CMP = 0b10100111
 
         if op == ADD:
             self.reg[reg_a] += self.reg[reg_b]
@@ -114,6 +120,19 @@ class CPU:
         elif op == XOR:
             xor_res = self.reg[reg_a] ^ self.reg[reg_b]
             self.reg[reg_a] = xor_res
+        elif op == CMP:
+            a = self.reg[reg_a]
+            b = self.reg[reg_b]
+            # xor = a ^ b
+            if a == b:
+                # set equal flag to 1
+                self.fl = 0b00000001
+            elif a < b:
+                # if a is less than b set L flag bit to 1
+                self.fl = 0b00000100
+            else:
+                # a must be greater than b, set G flag bit to 1
+                self.fl = 0b00000010
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -162,8 +181,14 @@ class CPU:
         self.reg[operand_a] = value
         self.sp += 1
 
-    # def handle_jmp(self, operand_a):
-    #     self.pc = self.reg[operand_a]
+    def handle_jmp(self, operand_a):
+        self.pc = self.reg[operand_a]
+
+    # def handle_jeq(self, operand_a):
+    #     '''If equal flag is set to true -> jump tp the address of register at operand_a'''
+    #     equal = self.fl
+    #     if equal:
+    #         self.pc = self.reg[operand_a]
 
     def handle_ret(self):
         '''Pop the value from the top of the stack and store it in the `PC`.'''
@@ -205,6 +230,30 @@ class CPU:
                 continue
             elif ir == 0b00010001:
                 self.branch_table[ir]()
+                continue
+            elif ir == 0b01010101:
+                # JEQ
+                equal = self.fl & 0b00000001
+                if equal:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+                self.fl = 0b00000000
+                continue
+            elif ir == 0b01010110:
+                # JNE
+                equal = self.fl & 0b00000001
+
+                if not equal:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+                self.fl = 0b00000000
+                continue
+
+            elif ir == 0b01010100:
+                # jmp
+                self.branch_table[ir](operand_a)
                 continue
 
             if alu_handle:
