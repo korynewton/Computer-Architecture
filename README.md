@@ -2,17 +2,17 @@
 
 ## Project
 
-* [Implement the LS-8 Emulator](ls8/)
+- [Implement the LS-8 Emulator](ls8/)
 
 ## Task List: add this to the first comment of your Pull Request
 
 ### Day 1: Get `print8.ls8` running
 
-- [ ] Inventory what is here
-- [ ] Implement the `CPU` constructor
-- [ ] Add RAM functions `ram_read()` and `ram_write()`
-- [ ] Implement the core of `run()`
-- [ ] Implement the `HLT` instruction handler
+- [x] Inventory what is here
+- [x] Implement the `CPU` constructor
+- [x] Add RAM functions `ram_read()` and `ram_write()`
+- [x] Implement the core of `run()`
+- [x] Implement the `HLT` instruction handler
 - [ ] Add the `LDI` instruction
 - [ ] Add the `PRN` instruction
 
